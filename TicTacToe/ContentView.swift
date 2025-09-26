@@ -33,11 +33,13 @@ struct ContentView: View {
                 
                 if winner != nil {
                     Text("\(winner!) Wins!")
-                    
-                    Button("Play Again") {
-                        
-                    }
+
                 }
+                
+                Button("Play Again") {
+                    resetGame()
+                }
+                .foregroundStyle(.softLavender)
                 
                 ZStack {
                     Rectangle()
@@ -87,6 +89,35 @@ struct ContentView: View {
     }
     
     func checkWinner() -> Bool {
+        
+        let lines = [
+            //Horizontal
+            [(0,0), (0,1), (0,2)],
+            [(1,0), (1,1), (1,2)],
+            [(2,0), (2,1), (2,2)],
+            //Vertical
+            [(0,0), (1,0), (2,0)],
+            [(0,1), (1,1), (2,1)],
+            [(0,2), (1,2), (2,2)],
+            //Diagonal
+            [(0,0), (1,1), (2,2)],
+            [(0,2), (1,1), (2,0)]
+        ]
+        
+        for line in lines {
+            let (xR, xC) = line[0]
+            let (yR, yC) = line[1]
+            let (zR, zC) = line[2]
+            
+            let x = board[xR][xC]
+            let y = board[yR][yC]
+            let z = board[zR][zC]
+            
+            if x != "" && x == y && y == z {
+                return true
+            }
+        }
+        
         return false
     }
     
