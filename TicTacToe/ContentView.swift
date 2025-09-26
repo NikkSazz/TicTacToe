@@ -12,7 +12,7 @@ struct ContentView: View {
     @State var board = Array(repeating: Array(repeating: "", count: 3), count: 3)
     @State var isXTurn = true
     @State var winner: String? = nil
-    
+        
     var body: some View {
         
         ZStack{
@@ -60,6 +60,22 @@ struct ContentView: View {
                                                 .bold()
                                                 .foregroundColor(board[row][col] == "X" ? .blue : .red)
                                         }
+                                        .onDrop(of: ["public.text"], isTargeted: nil) { providers in
+                                            guard board[row][col] == "" else { return false }
+                                            
+                                            if let item = providers.first {
+                                                _ = item.loadObject(ofClass: String.self) { object, error in
+                                                    if let symbol = object {
+                                                        DispatchQueue.main.async {
+                                                            board[row][col] = symbol
+                                                        }
+                                                    }
+                                                }
+                                                return true
+                                            }
+                                            return false
+                                        }
+                                    /*
                                         .onTapGesture {
                                             if board[row][col] == "" && winner == nil {
                                                 withAnimation {
@@ -75,7 +91,7 @@ struct ContentView: View {
                                                 isXTurn.toggle()
                                             }
                                         }
-                                        
+                                        */
                                 }
                             }
                         }
@@ -84,11 +100,29 @@ struct ContentView: View {
                 }
                 .padding(10)
 
+                // Dragging symbols
+                HStack(spacing: 50) {
+                    ForEach(["X", "O"], id: \.self) { symbol in
+                        Text(symbol)
+                            .font(.system(size: 50))
+                            .bold()
+                            .foregroundColor(symbol == "X" ? .blue : .red)
+                            .padding()
+                            .background(Color.lightLavender)
+                            .cornerRadius(8)
+                            .shadow(radius: 2)
+                            .onDrag {
+                                // draggedSymbol = symbol
+                                NSItemProvider(object: NSString(string: symbol))
+                            }
+                    }
+                }
+
             }
         }
     }
     
-    func checkWinner() -> Bool {
+    func checkWinner(symbol: String) -> Bool {
         
         let lines = [
             //Horizontal
@@ -109,11 +143,9 @@ struct ContentView: View {
             let (yR, yC) = line[1]
             let (zR, zC) = line[2]
             
-            let x = board[xR][xC]
-            let y = board[yR][yC]
-            let z = board[zR][zC]
-            
-            if x != "" && x == y && y == z {
+            if board[xR][xC] == symbol &&
+               board[yR][yC] == symbol &&
+               board[zR][zC] == symbol {
                 return true
             }
         }
@@ -133,8 +165,20 @@ struct ContentView: View {
         isXTurn = true
         winner = nil
     }
+    
+    func placeSymbol(row: Int, col: Int) {
+            guard board[row][col] == "" && winner == nil else { return }
+            board[row][col] = isXTurn ? "X" : "O"
+            if checkWinner(symbol: board[row][col]) {
+                winner = board[row][col]
+            } else if isBoardFull() {
+                winner = "Nobody"
+            } else {
+                isXTurn.toggle()
+            }
+        }
+    
 }
-
 
 #Preview {
     ContentView()
